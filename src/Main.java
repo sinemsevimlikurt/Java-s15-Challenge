@@ -1,11 +1,16 @@
+import interfaces.Billable;
+import interfaces.Searchable;
 import model.*;
 import service.*;
+
 import java.util.*;
 
 public class Main {
     private static final Scanner scanner = new Scanner(System.in);
-    private static final LibraryService libraryService = new LibraryService();
-    private static final InvoiceService invoiceService = new InvoiceService();
+
+    private static final LibraryService libraryService = new LibraryService(); // Kütüphane yönetimi
+    private static final Searchable searchable = libraryService;               // Arama işlemleri için interface
+    private static final Billable invoiceService = new InvoiceService();       // Fatura işlemleri
 
     public static void main(String[] args) {
         seedData(); // Örnek veriler
@@ -80,27 +85,26 @@ public class Main {
         switch (option) {
             case 1 -> {
                 String id = read("Kitap ID: ");
-                Book book = libraryService.getBookById(id);
+                Book book = searchable.searchById(id);
                 printResult(book);
             }
             case 2 -> {
                 String title = read("Başlık: ");
-                List<Book> books = libraryService.searchByTitle(title);  // Burayı güncelledik.
+                List<Book> books = searchable.searchByTitle(title);
                 books.forEach(System.out::println);
             }
             case 3 -> {
                 String author = read("Yazar Adı: ");
-                List<Book> books = libraryService.searchByAuthor(author);
+                List<Book> books = searchable.searchByAuthor(author);
                 books.forEach(System.out::println);
             }
             default -> System.out.println("Geçersiz seçim!");
         }
     }
 
-
     private static void updateBook() {
         String id = read("Güncellenecek Kitap ID: ");
-        Book book = libraryService.getBookById(id);
+        Book book = searchable.searchById(id);
 
         if (book == null) {
             System.out.println("Kitap bulunamadı.");
@@ -123,7 +127,6 @@ public class Main {
         System.out.println("Kitap bilgileri güncellendi.\n");
     }
 
-
     private static void deleteBook() {
         String id = read("Silinecek Kitap ID: ");
         libraryService.removeBook(id);
@@ -132,13 +135,13 @@ public class Main {
 
     private static void listBooksByCategory() {
         String category = read("Kategori Adı: ");
-        List<Book> books = libraryService.searchByCategory(category);
+        List<Book> books = searchable.searchByCategory(category); // interface üzerinden
         books.forEach(System.out::println);
     }
 
     private static void listBooksByAuthor() {
         String author = read("Yazar Adı: ");
-        List<Book> books = libraryService.searchByAuthor(author);
+        List<Book> books = searchable.searchByAuthor(author); // interface üzerinden
         books.forEach(System.out::println);
     }
 
@@ -154,7 +157,7 @@ public class Main {
         String bookId = read("Kitap ID: ");
         boolean success = libraryService.lendBook(bookId, userId);
         if (success) {
-            Book book = libraryService.getBookById(bookId);
+            Book book = searchable.searchById(bookId); // eski: getBookById
             Invoice invoice = invoiceService.generateInvoice(user, book, false);
             System.out.println("Kitap ödünç verildi. " + invoice);
         } else {
@@ -167,7 +170,7 @@ public class Main {
         String bookId = read("Kitap ID: ");
         boolean success = libraryService.returnBook(bookId, userId);
         if (success) {
-            Book book = libraryService.getBookById(bookId);
+            Book book = searchable.searchById(bookId); // eski: getBookById
             User user = libraryService.getUserById(userId);
             Invoice invoice = invoiceService.generateInvoice(user, book, true);
             System.out.println("Kitap başarıyla iade edildi. " + invoice);
@@ -194,7 +197,7 @@ public class Main {
         libraryService.addBook(b1);
         libraryService.addBook(b2);
 
-        User u1 = new User("U1", "Ayşe");
+        User u1 = new User("U1", "Sinem");
         libraryService.addUser(u1);
     }
 
